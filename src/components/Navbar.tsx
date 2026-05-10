@@ -21,7 +21,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 z-50 w-full glass-card border-b border-purple-500/20">
+    <nav className="fixed top-0 z-50 w-full border-b border-cyan-300/25 bg-slate-950/88 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -33,7 +33,7 @@ const Navbar = () => {
             >
               EH
             </motion.div>
-            <span className="text-xl font-bold gradient-text">EventHub</span>
+            <span className="text-xl font-bold text-cyan-100">EventHub</span>
           </Link>
 
           {/* Desktop Menu */}
@@ -41,11 +41,11 @@ const Navbar = () => {
             {menuItems.map((item) => (
               <Link key={item.name} href={item.href}>
                 <motion.span
-                  whileHover={{ color: '#a855f7' }}
-                  className="text-gray-300 hover:text-purple-400 transition-colors relative group cursor-pointer"
+                  whileHover={{ color: '#67e8f9' }}
+                  className="text-slate-100/90 hover:text-cyan-200 transition-colors relative group cursor-pointer font-medium"
                 >
                   {item.name}
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-cyan-600 group-hover:w-full transition-all duration-300" />
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-teal-400 to-sky-400 group-hover:w-full transition-all duration-300" />
                 </motion.span>
               </Link>
             ))}
@@ -57,7 +57,7 @@ const Navbar = () => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              className="relative text-gray-300 hover:text-purple-400 transition-colors"
+              className="relative text-slate-100/90 hover:text-cyan-200 transition-colors"
             >
               <FiBell size={20} />
               {unreadNotifications > 0 && (
@@ -68,7 +68,7 @@ const Navbar = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden text-gray-300 hover:text-purple-400"
+              className="md:hidden text-slate-100 hover:text-cyan-200"
             >
               {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
@@ -79,7 +79,7 @@ const Navbar = () => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-semibold hover:shadow-neon-purple transition-all"
+                    className="px-6 py-2 bg-gradient-to-r from-teal-500 to-sky-500 rounded-lg font-semibold text-white hover:shadow-neon-cyan transition-all"
                   >
                     Login
                   </motion.button>
@@ -96,12 +96,12 @@ const Navbar = () => {
           exit={{ height: 0, opacity: 0 }}
           className="md:hidden overflow-hidden"
         >
-          <div className="px-4 pt-4 pb-6 space-y-4 border-t border-purple-500/20">
+          <div className="px-4 pt-4 pb-6 space-y-4 border-t border-cyan-400/20 bg-slate-950/95">
             {menuItems.map((item) => (
               <Link key={item.name} href={item.href}>
                 <motion.div
                   whileHover={{ x: 8 }}
-                  className="text-gray-300 hover:text-purple-400 transition-colors cursor-pointer"
+                  className="text-slate-100 hover:text-cyan-200 transition-colors cursor-pointer"
                 >
                   {item.name}
                 </motion.div>
@@ -110,7 +110,7 @@ const Navbar = () => {
             <div className="pt-2">
               {user ? <AuthPanel compact /> : (
                 <Link href="/login">
-                  <button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 px-4 py-3 font-semibold">
+                  <button className="w-full rounded-lg bg-gradient-to-r from-teal-500 to-sky-500 px-4 py-3 font-semibold text-white">
                     Login
                   </button>
                 </Link>
