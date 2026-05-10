@@ -1,0 +1,99 @@
+'use client';
+
+import { ReactNode, useState } from 'react';
+import { motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion';
+import Layout from '@/components/Layout';
+import HeroSection from '@/components/hero/HeroSection';
+import FeaturesSection from '@/components/hero/FeaturesSection';
+import EventPlanningDashboard from '@/components/planning/EventPlanningDashboard';
+import RegistrationForm from '@/components/registration/RegistrationForm';
+import BillingDashboard from '@/components/billing/BillingDashboard';
+
+const chapters = [
+  { title: 'Launch', subtitle: 'Immersive event command center', content: <HeroSection /> },
+  { title: 'Discover', subtitle: 'Tools that appear as you scroll', content: <FeaturesSection /> },
+  { title: 'Plan', subtitle: 'Create and schedule live events', content: <EventPlanningDashboard /> },
+  { title: 'Register', subtitle: 'Guide attendees through booking', content: <RegistrationForm /> },
+  { title: 'Analyze', subtitle: 'Track billing and performance', content: <BillingDashboard /> },
+];
+
+function ScrollChapter({
+  children,
+  index,
+}: {
+  children: ReactNode;
+  index: number;
+}) {
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [index % 2 === 0 ? 34 : -34, index % 2 === 0 ? -34 : 34]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.98, 1.01, 0.98]);
+
+  return (
+    <motion.div
+      style={{ y, scale }}
+      initial={{ opacity: 0, y: 70 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.18 }}
+      transition={{ duration: 0.7, ease: 'easeOut' }}
+      className="relative cinematic-chapter"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function ScrollDirector() {
+  const [activeChapter, setActiveChapter] = useState(0);
+  const { scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.35 });
+  const titleY = useTransform(smoothProgress, [0, 1], ['0%', `-${(chapters.length - 1) * 100}%`]);
+
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    const nextChapter = Math.min(chapters.length - 1, Math.round(latest * (chapters.length - 1)));
+    setActiveChapter(nextChapter);
+  });
+
+  return (
+    <div className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
+      <div className="glass-card-light flex w-56 items-center gap-4 rounded-xl border border-cyan-400/20 p-4 shadow-2xl shadow-cyan-900/20">
+        <div className="relative h-44 w-1 overflow-hidden rounded-full bg-slate-700/80">
+          <motion.div
+            style={{ scaleY: smoothProgress, transformOrigin: 'top' }}
+            className="absolute left-0 top-0 h-full w-full rounded-full bg-gradient-to-b from-cyan-400 via-purple-400 to-pink-400"
+          />
+        </div>
+
+        <div className="min-w-0">
+          <p className="mb-2 text-xs uppercase tracking-[0.28em] text-cyan-200/80">
+            Scene {String(activeChapter + 1).padStart(2, '0')}
+          </p>
+          <div className="h-9 overflow-hidden">
+            <motion.div style={{ y: titleY }}>
+              {chapters.map((chapter) => (
+                <h2 key={chapter.title} className="h-9 text-2xl font-bold leading-9 text-white">
+                  {chapter.title}
+                </h2>
+              ))}
+            </motion.div>
+          </div>
+          <p className="mt-2 text-sm leading-5 text-gray-300">
+            {chapters[activeChapter].subtitle}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Layout>
+      <ScrollDirector />
+      {chapters.map((chapter, index) => (
+        <ScrollChapter key={chapter.title} index={index}>
+          {chapter.content}
+        </ScrollChapter>
+      ))}
+    </Layout>
+  );
+}
