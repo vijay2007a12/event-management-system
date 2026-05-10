@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { signInWithPopup, signOut } from 'firebase/auth';
-import { FiLogIn, FiLogOut, FiShield, FiUser } from 'react-icons/fi';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  updateProfile,
+} from 'firebase/auth';
+import { FiHome, FiLogIn, FiLogOut, FiMail, FiShield, FiUser } from 'react-icons/fi';
 import { firebaseAuth, googleProvider } from '@/lib/firebase';
 import { useEventStore } from '@/store';
 import { User } from '@/types';
@@ -32,6 +39,12 @@ const roles: Array<{
 export default function AuthPanel({ compact = false }: { compact?: boolean }) {
   const { user, setUser, addNotification } = useEventStore();
   const [isWorking, setIsWorking] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'register'>('signin');
+  const [emailForm, setEmailForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
 
   const handleGoogleLogin = async () => {
     if (!firebaseAuth || !googleProvider) {
@@ -83,6 +96,59 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
     setUser(null);
   };
 
+  const handleEmailAuth = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!firebaseAuth) {
+      addNotification({
+        id: `note-email-auth-missing-${Date.now()}`,
+        userId: 'guest',
+        title: 'Firebase is not configured',
+        message: 'Firebase Authentication is required for email sign in.',
+        type: 'warning',
+        read: false,
+        timestamp: new Date(),
+      });
+      return;
+    }
+
+    setIsWorking(true);
+
+    try {
+      const credential =
+        authMode === 'register'
+          ? await createUserWithEmailAndPassword(firebaseAuth, emailForm.email, emailForm.password)
+          : await signInWithEmailAndPassword(firebaseAuth, emailForm.email, emailForm.password);
+
+      if (authMode === 'register' && emailForm.name.trim()) {
+        await updateProfile(credential.user, { displayName: emailForm.name.trim() });
+      }
+
+      const role = (window.localStorage.getItem(ROLE_STORAGE_KEY) as User['role']) || 'customer';
+
+      setUser({
+        id: credential.user.uid,
+        email: credential.user.email || emailForm.email,
+        name: credential.user.displayName || emailForm.name || emailForm.email,
+        avatar: credential.user.photoURL || undefined,
+        role,
+        createdAt: new Date(),
+      });
+
+      addNotification({
+        id: `note-email-auth-${Date.now()}`,
+        userId: credential.user.uid,
+        title: authMode === 'register' ? 'Account created' : 'Signed in',
+        message: 'Your EventHub workspace is ready.',
+        type: 'success',
+        read: false,
+        timestamp: new Date(),
+      });
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
   const handleRoleChange = (role: User['role']) => {
     if (!user) return;
 
@@ -92,16 +158,86 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
 
   if (!user) {
     return (
-      <motion.button
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.96 }}
-        onClick={handleGoogleLogin}
-        disabled={isWorking || !firebaseAuth || !googleProvider}
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 px-5 py-2.5 font-semibold text-white transition-all hover:shadow-neon-purple disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <FiLogIn size={18} />
-        {!firebaseAuth || !googleProvider ? 'Firebase Setup Needed' : isWorking ? 'Signing in...' : 'Google Login'}
-      </motion.button>
+      <div className="glass-card-light w-full rounded-xl border border-cyan-400/20 p-6">
+        <div className="mb-5 flex rounded-lg border border-cyan-400/20 bg-slate-950/40 p-1">
+          {(['signin', 'register'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setAuthMode(mode)}
+              className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-all ${
+                authMode === mode
+                  ? 'bg-cyan-500/20 text-cyan-100'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              {mode === 'signin' ? 'Sign In' : 'Register'}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleEmailAuth} className="space-y-4">
+          {authMode === 'register' && (
+            <input
+              type="text"
+              placeholder="Full name"
+              value={emailForm.name}
+              onChange={(event) => setEmailForm({ ...emailForm, name: event.target.value })}
+              className="w-full rounded-lg px-4 py-3"
+              required
+            />
+          )}
+          <input
+            type="email"
+            placeholder="Email address"
+            value={emailForm.email}
+            onChange={(event) => setEmailForm({ ...emailForm, email: event.target.value })}
+            className="w-full rounded-lg px-4 py-3"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={emailForm.password}
+            onChange={(event) => setEmailForm({ ...emailForm, password: event.target.value })}
+            className="w-full rounded-lg px-4 py-3"
+            minLength={6}
+            required
+          />
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={isWorking || !firebaseAuth}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-teal-500 to-sky-500 px-5 py-3 font-semibold text-white transition-all hover:shadow-neon-cyan disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <FiMail size={18} />
+            {isWorking ? 'Please wait...' : authMode === 'signin' ? 'Sign In' : 'Create Account'}
+          </motion.button>
+        </form>
+
+        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-gray-500">
+          <span className="h-px flex-1 bg-cyan-400/20" />
+          or
+          <span className="h-px flex-1 bg-cyan-400/20" />
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleGoogleLogin}
+          disabled={isWorking || !firebaseAuth || !googleProvider}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-cyan-400/30 bg-slate-950/50 px-5 py-3 font-semibold text-white transition-all hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <FiLogIn size={18} />
+          {!firebaseAuth || !googleProvider ? 'Firebase Setup Needed' : 'Continue with Google'}
+        </motion.button>
+
+        <Link href="/" className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-purple-500/20 px-4 py-3 text-sm text-gray-300 transition-colors hover:border-cyan-400/50 hover:text-white">
+          <FiHome size={16} />
+          Home
+        </Link>
+      </div>
     );
   }
 
@@ -181,6 +317,11 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
         <FiLogOut size={18} />
         Sign Out
       </button>
+
+      <Link href="/" className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-cyan-400/20 px-4 py-3 text-sm text-gray-300 transition-colors hover:border-cyan-300/60 hover:text-white">
+        <FiHome size={16} />
+        Home
+      </Link>
     </div>
   );
 }
