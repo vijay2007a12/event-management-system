@@ -32,7 +32,7 @@ const FeaturesSection = () => {
     {
       icon: FiTrendingUp,
       title: 'Real-time Analytics',
-      description: 'Live dashboards with conversion rates, revenue tracking, and insights',
+      description: 'Live dashboards with conversion rates, capacity tracking, and insights',
       color: 'from-cyan-600 to-teal-600',
     },
     {
@@ -43,8 +43,8 @@ const FeaturesSection = () => {
     },
     {
       icon: FiShield,
-      title: 'Secure Payments',
-      description: 'PCI-compliant, multi-currency, and integrated with major payment processors',
+      title: 'Secure Role Access',
+      description: 'Firebase login with focused admin and customer workspaces',
       color: 'from-red-600 to-pink-600',
     },
     {

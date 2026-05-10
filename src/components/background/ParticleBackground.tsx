@@ -22,7 +22,7 @@ const ParticleBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationIdRef = useRef<number>();
-  const scrollRef = useRef({ y: 0, velocity: 0 });
+  const scrollRef = useRef({ y: 0, velocity: 0, targetProgress: 0, progress: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -71,8 +71,10 @@ const ParticleBackground = () => {
 
     const handleScroll = () => {
       const nextY = window.scrollY;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       scrollRef.current.velocity = nextY - scrollRef.current.y;
       scrollRef.current.y = nextY;
+      scrollRef.current.targetProgress = Math.min(1, Math.max(0, nextY / maxScroll));
     };
 
     const drawDottedLine = (from: MapPoint, to: MapPoint, offset: number) => {
@@ -152,8 +154,9 @@ const ParticleBackground = () => {
     };
 
     const drawAirplane = (time: number) => {
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      const scrollProgress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+      const autoProgress = (time * 0.000035) % 1;
+      scrollRef.current.progress += (scrollRef.current.targetProgress - scrollRef.current.progress) * 0.08;
+      const scrollProgress = (autoProgress + scrollRef.current.progress * 0.75) % 1;
       const route = routes[0];
       const segmentProgress = scrollProgress * (route.length - 1);
       const segmentIndex = Math.min(route.length - 2, Math.floor(segmentProgress));
@@ -260,9 +263,12 @@ const ParticleBackground = () => {
     // Handle resize
     const handleResize = () => {
       resizeCanvas();
+      initializeParticles();
+      handleScroll();
     };
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
     return () => {
       window.removeEventListener('resize', handleResize);

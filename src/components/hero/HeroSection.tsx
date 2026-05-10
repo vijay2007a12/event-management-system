@@ -2,14 +2,14 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FiArrowRight, FiStar, FiTrendingUp, FiCalendar, FiBarChart, FiCreditCard } from 'react-icons/fi';
+import { FiArrowRight, FiStar, FiTrendingUp, FiCalendar, FiBarChart, FiCheckCircle } from 'react-icons/fi';
 import Scene3D from '@/components/3d/Scene3D';
 
 const HeroSection = () => {
   const stats = [
     { number: '10K+', label: 'Active Events', icon: FiTrendingUp },
     { number: '500K+', label: 'Users', icon: FiStar },
-    { number: '$50M+', label: 'Revenue', icon: FiStar },
+    { number: '98%', label: 'Capacity Tools', icon: FiStar },
   ];
 
   const containerVariants = {
@@ -171,13 +171,13 @@ const HeroSection = () => {
             },
             {
               title: 'Real-time Analytics',
-              description: 'Live registration and revenue tracking',
+              description: 'Live registration and capacity tracking',
               icon: FiBarChart,
             },
             {
-              title: 'Seamless Payments',
-              description: 'Multiple payment integrations',
-              icon: FiCreditCard,
+              title: 'Ticket Check-in',
+              description: 'QR-ready registration workflows',
+              icon: FiCheckCircle,
             },
           ].map((feature, idx) => {
             const Icon = feature.icon;

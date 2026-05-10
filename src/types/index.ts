@@ -27,39 +27,13 @@ export interface Registration {
   qrCode?: string;
 }
 
-// Payment Types
-export interface Payment {
-  id: string;
-  eventId: string;
-  registrationId: string;
-  amount: number;
-  currency: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
-  paymentMethod: 'card' | 'upi' | 'wallet';
-  timestamp: Date;
-  transactionId: string;
-}
-
-// Invoice Types
-export interface Invoice {
-  id: string;
-  eventId: string;
-  paymentId: string;
-  totalAmount: number;
-  taxAmount: number;
-  netAmount: number;
-  generatedAt: Date;
-  dueDate: Date;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
-}
-
 // User Types
 export interface User {
   id: string;
   email: string;
   name: string;
   avatar?: string;
-  role: 'admin' | 'organizer' | 'attendee' | 'customer';
+  role: 'admin' | 'customer';
   createdAt: Date;
 }
 
@@ -67,7 +41,6 @@ export interface User {
 export interface DashboardStats {
   totalEvents: number;
   totalRegistrations: number;
-  totalRevenue: number;
   upcomingEvents: number;
   activeRegistrations: number;
   conversionRate: number;
@@ -113,9 +86,8 @@ export interface EventAnalytics {
   totalViews: number;
   totalRegistrations: number;
   conversionRate: number;
-  totalRevenue: number;
   averageTicketPrice: number;
   registrationTrend: { date: string; count: number }[];
-  revenueByTicketType: { type: string; amount: number }[];
+  registrationsByTicketType: { type: string; count: number }[];
   geographicDistribution: { location: string; count: number }[];
 }

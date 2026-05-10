@@ -31,10 +31,15 @@ const roles: Array<{
   {
     id: 'admin',
     label: 'Admin',
-    description: 'Manage events, users, payments, and reports.',
+    description: 'Manage events, users, registrations, and reports.',
     icon: FiShield,
   },
 ];
+
+function getSelectedRole(): User['role'] {
+  const role = window.localStorage.getItem(ROLE_STORAGE_KEY);
+  return role === 'admin' || role === 'customer' ? role : 'customer';
+}
 
 export default function AuthPanel({ compact = false }: { compact?: boolean }) {
   const { user, setUser, addNotification } = useEventStore();
@@ -64,7 +69,7 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
 
     try {
       const result = await signInWithPopup(firebaseAuth, googleProvider);
-      const role = (window.localStorage.getItem(ROLE_STORAGE_KEY) as User['role']) || 'customer';
+      const role = getSelectedRole();
 
       setUser({
         id: result.user.uid,
@@ -124,7 +129,7 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
         await updateProfile(credential.user, { displayName: emailForm.name.trim() });
       }
 
-      const role = (window.localStorage.getItem(ROLE_STORAGE_KEY) as User['role']) || 'customer';
+      const role = getSelectedRole();
 
       setUser({
         id: credential.user.uid,

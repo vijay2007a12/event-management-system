@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Event, Registration, Payment, User, Notification, DashboardStats } from '@/types';
+import { Event, Registration, User, Notification, DashboardStats } from '@/types';
 
 const sampleEvents: Event[] = [
   {
@@ -68,37 +68,12 @@ const sampleRegistrations: Registration[] = [
   },
 ];
 
-const samplePayments: Payment[] = [
-  {
-    id: 'pay-001',
-    eventId: 'event-tech-summit',
-    registrationId: 'reg-001',
-    amount: 199,
-    currency: 'USD',
-    status: 'completed',
-    paymentMethod: 'card',
-    timestamp: new Date('2026-05-01T10:16:00'),
-    transactionId: 'TXN-20260501-001',
-  },
-  {
-    id: 'pay-002',
-    eventId: 'event-design-night',
-    registrationId: 'reg-002',
-    amount: 99,
-    currency: 'USD',
-    status: 'completed',
-    paymentMethod: 'upi',
-    timestamp: new Date('2026-05-03T14:47:00'),
-    transactionId: 'TXN-20260503-002',
-  },
-];
-
 const sampleNotifications: Notification[] = [
   {
     id: 'note-001',
     userId: 'current-user',
     title: 'Welcome to EventHub',
-    message: 'Demo events, registrations, and billing data are ready to explore.',
+    message: 'Demo events and registrations are ready to explore.',
     type: 'info',
     read: false,
     timestamp: new Date('2026-05-10T09:00:00'),
@@ -110,7 +85,6 @@ interface EventStore {
   // State
   events: Event[];
   registrations: Registration[];
-  payments: Payment[];
   user: User | null;
   notifications: Notification[];
   isLoading: boolean;
@@ -127,11 +101,6 @@ interface EventStore {
   setRegistrations: (registrations: Registration[]) => void;
   addRegistration: (registration: Registration) => void;
   updateRegistration: (id: string, registration: Partial<Registration>) => void;
-
-  // Payments
-  setPayments: (payments: Payment[]) => void;
-  addPayment: (payment: Payment) => void;
-  updatePayment: (id: string, payment: Partial<Payment>) => void;
 
   // User
   setUser: (user: User | null) => void;
@@ -152,7 +121,6 @@ interface EventStore {
 export const useEventStore = create<EventStore>((set) => ({
   events: sampleEvents,
   registrations: sampleRegistrations,
-  payments: samplePayments,
   user: null,
   notifications: sampleNotifications,
   isLoading: false,
@@ -178,13 +146,6 @@ export const useEventStore = create<EventStore>((set) => ({
       registrations: state.registrations.map((r) =>
         r.id === id ? { ...r, ...registration } : r
       ),
-    })),
-
-  setPayments: (payments) => set({ payments }),
-  addPayment: (payment) => set((state) => ({ payments: [...state.payments, payment] })),
-  updatePayment: (id, payment) =>
-    set((state) => ({
-      payments: state.payments.map((p) => (p.id === id ? { ...p, ...payment } : p)),
     })),
 
   setUser: (user) => set({ user }),

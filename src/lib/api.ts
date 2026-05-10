@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
-import { Event, Registration, Payment, Invoice, User } from '@/types';
+import { Event, Registration, User } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -81,35 +81,6 @@ class APIClient {
 
   async updateRegistration(id: string, registration: Partial<Registration>): Promise<Registration> {
     const response = await this.client.put(`/registrations/${id}`, registration);
-    return response.data;
-  }
-
-  // Payments API
-  async getPayments(eventId?: string): Promise<Payment[]> {
-    const params = eventId ? { eventId } : {};
-    const response = await this.client.get('/payments', { params });
-    return response.data;
-  }
-
-  async createPayment(payment: Partial<Payment>): Promise<Payment> {
-    const response = await this.client.post('/payments', payment);
-    return response.data;
-  }
-
-  async getPaymentStatus(id: string): Promise<Payment> {
-    const response = await this.client.get(`/payments/${id}`);
-    return response.data;
-  }
-
-  // Invoices API
-  async getInvoices(eventId?: string): Promise<Invoice[]> {
-    const params = eventId ? { eventId } : {};
-    const response = await this.client.get('/invoices', { params });
-    return response.data;
-  }
-
-  async generateInvoice(invoice: Partial<Invoice>): Promise<Invoice> {
-    const response = await this.client.post('/invoices', invoice);
     return response.data;
   }
 

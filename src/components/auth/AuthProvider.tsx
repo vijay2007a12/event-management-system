@@ -12,9 +12,7 @@ function getStoredRole(): User['role'] {
   if (typeof window === 'undefined') return 'customer';
 
   const role = window.localStorage.getItem(ROLE_STORAGE_KEY);
-  return role === 'admin' || role === 'organizer' || role === 'attendee' || role === 'customer'
-    ? role
-    : 'customer';
+  return role === 'admin' || role === 'customer' ? role : 'customer';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

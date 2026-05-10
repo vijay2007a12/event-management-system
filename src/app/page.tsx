@@ -7,14 +7,14 @@ import HeroSection from '@/components/hero/HeroSection';
 import FeaturesSection from '@/components/hero/FeaturesSection';
 import EventPlanningDashboard from '@/components/planning/EventPlanningDashboard';
 import RegistrationForm from '@/components/registration/RegistrationForm';
-import BillingDashboard from '@/components/billing/BillingDashboard';
+import RegistrationAnalyticsDashboard from '@/components/analytics/RegistrationAnalyticsDashboard';
 
 const chapters = [
   { title: 'Launch', subtitle: 'Immersive event command center', content: <HeroSection /> },
   { title: 'Discover', subtitle: 'Tools that appear as you scroll', content: <FeaturesSection /> },
   { title: 'Plan', subtitle: 'Create and schedule live events', content: <EventPlanningDashboard /> },
   { title: 'Register', subtitle: 'Guide attendees through booking', content: <RegistrationForm /> },
-  { title: 'Analyze', subtitle: 'Track billing and performance', content: <BillingDashboard /> },
+  { title: 'Analyze', subtitle: 'Track registrations and capacity', content: <RegistrationAnalyticsDashboard /> },
 ];
 
 function ScrollChapter({

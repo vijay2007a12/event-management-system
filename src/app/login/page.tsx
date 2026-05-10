@@ -3,13 +3,13 @@
 import Layout from '@/components/Layout';
 import AuthPanel from '@/components/auth/AuthPanel';
 import { motion } from 'framer-motion';
-import { FiCalendar, FiCreditCard, FiShield, FiUsers } from 'react-icons/fi';
+import { FiBarChart, FiCalendar, FiShield, FiUsers } from 'react-icons/fi';
 
 const highlights = [
   { label: 'Google secure login', icon: FiShield },
   { label: 'Customer ticket center', icon: FiUsers },
   { label: 'Admin event control', icon: FiCalendar },
-  { label: 'Billing overview', icon: FiCreditCard },
+  { label: 'Registration reports', icon: FiBarChart },
 ];
 
 export default function LoginPage() {
@@ -30,7 +30,7 @@ export default function LoginPage() {
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-gray-300">
               Sign in with Google, then choose the workspace you need. Customers can manage
-              registrations while admins get event, attendee, and revenue controls.
+              registrations while admins get event, user, and reporting controls.
             </p>
 
             <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">

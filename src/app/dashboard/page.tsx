@@ -3,13 +3,13 @@
 import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FiBarChart, FiUsers, FiTrendingUp, FiCalendar, FiBell, FiSettings, FiPlus, FiMail, FiDownloadCloud, FiCreditCard, FiShield, FiUser, FiMapPin, FiCheckCircle } from 'react-icons/fi';
+import { FiBarChart, FiUsers, FiTrendingUp, FiCalendar, FiBell, FiSettings, FiPlus, FiMail, FiDownloadCloud, FiShield, FiUser, FiMapPin, FiCheckCircle } from 'react-icons/fi';
 import { useEventStore } from '@/store';
-import BillingDashboard from '@/components/billing/BillingDashboard';
+import RegistrationAnalyticsDashboard from '@/components/analytics/RegistrationAnalyticsDashboard';
 import AuthPanel from '@/components/auth/AuthPanel';
 
 export default function DashboardPage() {
-  const { events, registrations, payments, user } = useEventStore();
+  const { events, registrations, user } = useEventStore();
   const isAdmin = user?.role === 'admin';
   const customerRegistrations = user
     ? registrations.filter((registration) => registration.userEmail === user.email)
@@ -31,11 +31,15 @@ export default function DashboardPage() {
       trend: '+15 new',
     },
     {
-      label: 'Total Revenue',
-      value: `$${payments.reduce((sum, p) => sum + (p.status === 'completed' ? p.amount : 0), 0)}`,
+      label: 'Capacity Filled',
+      value: `${Math.round(
+        (events.reduce((sum, event) => sum + event.registeredCount, 0) /
+          (events.reduce((sum, event) => sum + event.capacity, 0) || 1)) *
+          100
+      )}%`,
       icon: FiTrendingUp,
       color: 'from-cyan-600 to-teal-600',
-      trend: '+8.5% from last month',
+      trend: 'Across all events',
     },
     {
       label: 'Conversion Rate',
@@ -47,9 +51,9 @@ export default function DashboardPage() {
   ];
 
   const recentActivity = [
-    { type: 'registration', message: 'New registration for Tech Conference 2024', time: '2 hours ago' },
-    { type: 'payment', message: 'Payment received - $249.99', time: '4 hours ago' },
-    { type: 'event', message: 'Event "Summer Festival" created', time: '1 day ago' },
+    { type: 'registration', message: 'New registration for Future Tech Summit', time: '2 hours ago' },
+    { type: 'registration', message: 'VIP ticket added for Design Systems Night', time: '4 hours ago' },
+    { type: 'event', message: 'Campus Startup Fair is scheduled', time: '1 day ago' },
   ];
 
   const containerVariants = {
@@ -106,7 +110,7 @@ export default function DashboardPage() {
             </h1>
             <p className="text-gray-400">
               {isAdmin
-                ? 'Manage events, registrations, payments, and platform activity.'
+                ? 'Manage events, registrations, users, and platform activity.'
                 : 'Track your tickets, upcoming events, and registration activity.'}
             </p>
           </div>
@@ -188,7 +192,6 @@ export default function DashboardPage() {
                     >
                       <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                         activity.type === 'registration' ? 'bg-cyan-400' :
-                        activity.type === 'payment' ? 'bg-green-400' :
                         'bg-purple-400'
                       }`} />
                       <div className="flex-grow">
@@ -211,7 +214,6 @@ export default function DashboardPage() {
                     { label: 'Create Event', icon: FiPlus, href: '/events/create' },
                     { label: 'Send Email', icon: FiMail, href: '/dashboard' },
                     { label: 'Download Report', icon: FiDownloadCloud, href: '/dashboard' },
-                    { label: 'View Payments', icon: FiCreditCard, href: '/dashboard' },
                   ].map((action, idx) => {
                     const Icon = action.icon;
 
@@ -231,8 +233,8 @@ export default function DashboardPage() {
               </motion.div>
             </motion.div>
 
-            {/* Billing Section */}
-            <BillingDashboard />
+            {/* Analytics Section */}
+            <RegistrationAnalyticsDashboard />
           </>
         ) : (
           <>
@@ -246,7 +248,7 @@ export default function DashboardPage() {
               {[
                 { label: 'My Tickets', value: customerRegistrations.length, icon: FiCheckCircle, color: 'from-cyan-600 to-teal-600' },
                 { label: 'Upcoming Events', value: events.filter((event) => event.status === 'scheduled').length, icon: FiCalendar, color: 'from-purple-600 to-pink-600' },
-                { label: 'Saved Spend', value: '$0', icon: FiCreditCard, color: 'from-blue-600 to-cyan-600' },
+                { label: 'Checked In', value: customerRegistrations.filter((registration) => registration.status === 'checked-in').length, icon: FiCheckCircle, color: 'from-blue-600 to-cyan-600' },
               ].map((stat) => {
                 const Icon = stat.icon;
 

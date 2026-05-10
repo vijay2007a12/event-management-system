@@ -5,7 +5,7 @@ import '@/styles/globals.css';
 export const metadata: Metadata = {
   title: 'EventHub - Futuristic Event Management Platform',
   description: 'Plan, register, and manage events with immersive 3D visuals and premium UI',
-  keywords: ['events', 'management', 'registration', 'billing', '3D', 'animations'],
+  keywords: ['events', 'management', 'registration', 'analytics', '3D', 'animations'],
   authors: [{ name: 'EventHub Team' }],
   creator: 'EventHub',
   formatDetection: {
