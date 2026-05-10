@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { FiLogIn, FiLogOut, FiShield, FiUser } from 'react-icons/fi';
@@ -35,6 +34,19 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
   const [isWorking, setIsWorking] = useState(false);
 
   const handleGoogleLogin = async () => {
+    if (!firebaseAuth || !googleProvider) {
+      addNotification({
+        id: `note-firebase-missing-${Date.now()}`,
+        userId: 'guest',
+        title: 'Firebase is not configured',
+        message: 'Add the Firebase environment variables in Vercel to enable Google login.',
+        type: 'warning',
+        read: false,
+        timestamp: new Date(),
+      });
+      return;
+    }
+
     setIsWorking(true);
 
     try {
@@ -65,6 +77,8 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
   };
 
   const handleSignOut = async () => {
+    if (!firebaseAuth) return;
+
     await signOut(firebaseAuth);
     setUser(null);
   };
@@ -82,11 +96,11 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.96 }}
         onClick={handleGoogleLogin}
-        disabled={isWorking}
+        disabled={isWorking || !firebaseAuth || !googleProvider}
         className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 px-5 py-2.5 font-semibold text-white transition-all hover:shadow-neon-purple disabled:cursor-not-allowed disabled:opacity-60"
       >
         <FiLogIn size={18} />
-        {isWorking ? 'Signing in...' : 'Google Login'}
+        {!firebaseAuth || !googleProvider ? 'Firebase Setup Needed' : isWorking ? 'Signing in...' : 'Google Login'}
       </motion.button>
     );
   }
@@ -95,11 +109,9 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
     return (
       <div className="flex items-center gap-3">
         {user.avatar ? (
-          <Image
+          <img
             src={user.avatar}
             alt={user.name}
-            width={32}
-            height={32}
             className="h-8 w-8 rounded-full border border-cyan-400/40"
           />
         ) : (
@@ -123,11 +135,9 @@ export default function AuthPanel({ compact = false }: { compact?: boolean }) {
     <div className="glass-card-light rounded-xl border border-purple-500/30 p-6">
       <div className="mb-6 flex items-center gap-4">
         {user.avatar ? (
-          <Image
+          <img
             src={user.avatar}
             alt={user.name}
-            width={56}
-            height={56}
             className="h-14 w-14 rounded-full border border-cyan-400/40"
           />
         ) : (
