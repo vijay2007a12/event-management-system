@@ -1,13 +1,16 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FiCalendar, FiCheck, FiCode, FiUser, FiMail, FiPhone } from 'react-icons/fi';
-import { QRCodeSVG } from 'qrcode.react';
+import { FiCalendar, FiCode, FiCreditCard, FiUser, FiMail, FiPhone } from 'react-icons/fi';
 import { useEventStore } from '@/store';
 
+export const PENDING_PAYMENT_KEY = 'eventhub-pending-demo-payment';
+
 const RegistrationForm = ({ eventId }: { eventId?: string }) => {
-  const { events, addRegistration, addNotification } = useEventStore();
+  const router = useRouter();
+  const { events } = useEventStore();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     selectedEventId: eventId || '',
@@ -18,7 +21,6 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
     ticketType: 'regular' as 'regular' | 'vip' | 'premium',
     specialRequests: '',
   });
-  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
 
   const steps = ['Personal', 'Ticket', 'Review'];
@@ -73,45 +75,33 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
       return;
     }
 
-    const newRegistration = {
-      id: Date.now().toString(),
-      eventId: formData.selectedEventId,
-      userId: `user-${Date.now()}`,
-      userName: `${formData.firstName} ${formData.lastName}`,
-      userEmail: formData.email,
-      registeredAt: new Date(),
-      status: 'registered' as const,
-      ticketType: formData.ticketType,
-      qrCode: `QR-${Date.now()}`,
+    const registrationId = Date.now().toString();
+    const ticketPrice = ticketPrices[formData.ticketType];
+    const taxAmount = Math.round(ticketPrice * 0.1);
+
+    const pendingPayment = {
+      registration: {
+        id: registrationId,
+        eventId: formData.selectedEventId,
+        userId: `user-${Date.now()}`,
+        userName: `${formData.firstName} ${formData.lastName}`,
+        userEmail: formData.email,
+        registeredAt: new Date().toISOString(),
+        status: 'registered',
+        ticketType: formData.ticketType,
+        qrCode: `QR-${registrationId}`,
+      },
+      billing: {
+        eventTitle: selectedEvent?.title || 'Selected event',
+        subtotal: ticketPrice,
+        tax: taxAmount,
+        total: ticketPrice + taxAmount,
+        currency: 'USD',
+      },
     };
 
-    addRegistration(newRegistration);
-    setRegistrationId(newRegistration.id);
-
-    addNotification({
-      id: Date.now().toString(),
-      userId: 'current-user',
-      title: 'Registration Successful!',
-      message: `Your ticket for ${selectedEvent?.title || 'the selected event'} has been confirmed.`,
-      type: 'success',
-      read: false,
-      timestamp: new Date(),
-    });
-
-    // Reset form
-    setTimeout(() => {
-      setStep(1);
-      setFormData({
-        selectedEventId: eventId || '',
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        ticketType: 'regular',
-        specialRequests: '',
-      });
-      setRegistrationId(null);
-    }, 3000);
+    window.localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pendingPayment));
+    router.push('/payment');
   };
 
   const containerVariants = {
@@ -141,36 +131,7 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
         <p className="text-gray-400">Secure your spot at the event</p>
       </motion.div>
 
-      {registrationId ? (
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="glass-card-light p-12 rounded-2xl border border-green-500/30 text-center"
-        >
-          <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 0.6 }}
-            className="inline-block mb-6"
-          >
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
-              <FiCheck size={32} className="text-green-400" />
-            </div>
-          </motion.div>
-
-          <h3 className="text-2xl font-bold mb-2">Registration Confirmed!</h3>
-          <p className="text-gray-400 mb-8">Your ticket QR code:</p>
-
-          <div className="bg-white p-6 rounded-lg inline-block mb-8">
-            <QRCodeSVG value={`ticket-${registrationId}`} size={256} level="H" />
-          </div>
-
-          <p className="text-sm text-gray-400">
-            Keep this QR code handy for check-in. You&apos;ll receive a confirmation email shortly.
-          </p>
-        </motion.div>
-      ) : (
-        <motion.div
+      <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -389,9 +350,10 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       type="submit"
-                      className="flex-grow px-6 py-3 bg-gradient-to-r from-green-600 to-cyan-600 rounded-lg font-semibold"
+                      className="flex-grow px-6 py-3 bg-gradient-to-r from-green-600 to-cyan-600 rounded-lg font-semibold inline-flex items-center justify-center gap-2"
                     >
-                      Complete Registration
+                      <FiCreditCard size={18} />
+                      Continue to Payment
                     </motion.button>
                   )}
                 </div>
@@ -464,7 +426,6 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
             </motion.div>
           </div>
         </motion.div>
-      )}
     </section>
   );
 };
