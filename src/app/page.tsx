@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import { motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion';
+import { ReactNode, useEffect, useState } from 'react';
+import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion';
 import Layout from '@/components/Layout';
 import HeroSection from '@/components/hero/HeroSection';
 import FeaturesSection from '@/components/hero/FeaturesSection';
@@ -20,9 +20,11 @@ const chapters = [
 function ScrollChapter({
   children,
   index,
+  onEnter,
 }: {
   children: ReactNode;
   index: number;
+  onEnter: (index: number) => void;
 }) {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [index % 2 === 0 ? 34 : -34, index % 2 === 0 ? -34 : 34]);
@@ -33,7 +35,8 @@ function ScrollChapter({
       style={{ y, scale }}
       initial={{ opacity: 0, y: 70 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: false, amount: 0.18 }}
+      onViewportEnter={() => onEnter(index)}
+      viewport={{ once: false, amount: 0.42 }}
       transition={{ duration: 0.7, ease: 'easeOut' }}
       className="relative cinematic-chapter"
     >
@@ -42,16 +45,16 @@ function ScrollChapter({
   );
 }
 
-function ScrollDirector() {
-  const [activeChapter, setActiveChapter] = useState(0);
+function ScrollDirector({ activeChapter }: { activeChapter: number }) {
   const { scrollYProgress } = useScroll();
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.35 });
-  const titleY = useTransform(smoothProgress, [0, 1], ['0%', `-${(chapters.length - 1) * 100}%`]);
+  const chapterMotion = useMotionValue(activeChapter);
+  const smoothChapter = useSpring(chapterMotion, { stiffness: 170, damping: 24, mass: 0.4 });
+  const titleY = useTransform(smoothChapter, (latest) => `-${latest * 100}%`);
 
-  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    const nextChapter = Math.min(chapters.length - 1, Math.round(latest * (chapters.length - 1)));
-    setActiveChapter(nextChapter);
-  });
+  useEffect(() => {
+    chapterMotion.set(activeChapter);
+  }, [activeChapter, chapterMotion]);
 
   return (
     <div className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
@@ -86,11 +89,13 @@ function ScrollDirector() {
 }
 
 export default function Home() {
+  const [activeChapter, setActiveChapter] = useState(0);
+
   return (
     <Layout>
-      <ScrollDirector />
+      <ScrollDirector activeChapter={activeChapter} />
       {chapters.map((chapter, index) => (
-        <ScrollChapter key={chapter.title} index={index}>
+        <ScrollChapter key={chapter.title} index={index} onEnter={setActiveChapter}>
           {chapter.content}
         </ScrollChapter>
       ))}
