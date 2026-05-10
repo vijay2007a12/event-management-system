@@ -2,14 +2,15 @@
 
 import { FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiCheck, FiCode, FiUser, FiMail, FiPhone } from 'react-icons/fi';
+import { FiCalendar, FiCheck, FiCode, FiUser, FiMail, FiPhone } from 'react-icons/fi';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEventStore } from '@/store';
 
 const RegistrationForm = ({ eventId }: { eventId?: string }) => {
-  const { addRegistration, addNotification } = useEventStore();
+  const { events, addRegistration, addNotification } = useEventStore();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
+    selectedEventId: eventId || '',
     firstName: '',
     lastName: '',
     email: '',
@@ -18,10 +19,41 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
     specialRequests: '',
   });
   const [registrationId, setRegistrationId] = useState<string | null>(null);
+  const [formError, setFormError] = useState('');
 
   const steps = ['Personal', 'Ticket', 'Review'];
+  const selectedEvent = events.find((event) => event.id === formData.selectedEventId);
+
+  const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
+
+  const validateStep = (currentStep: number) => {
+    if (currentStep === 1) {
+      if (!formData.selectedEventId) return 'Please select an event.';
+      if (!formData.firstName.trim()) return 'First name is mandatory.';
+      if (!formData.lastName.trim()) return 'Last name is mandatory.';
+      if (!isValidEmail(formData.email)) return 'Enter a valid email address.';
+      if (!formData.phone.trim()) return 'Phone number is mandatory.';
+    }
+
+    if (currentStep === 2 && !formData.ticketType) {
+      return 'Please select a ticket type.';
+    }
+
+    if (currentStep === 3 && !formData.specialRequests.trim()) {
+      return 'Please add your requirements or type N/A.';
+    }
+
+    return '';
+  };
 
   const handleNext = () => {
+    const error = validateStep(step);
+    if (error) {
+      setFormError(error);
+      return;
+    }
+
+    setFormError('');
     if (step < steps.length) {
       setStep(step + 1);
     }
@@ -35,10 +67,15 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    const error = validateStep(step);
+    if (error) {
+      setFormError(error);
+      return;
+    }
 
     const newRegistration = {
       id: Date.now().toString(),
-      eventId: eventId || 'sample-event',
+      eventId: formData.selectedEventId,
       userId: `user-${Date.now()}`,
       userName: `${formData.firstName} ${formData.lastName}`,
       userEmail: formData.email,
@@ -55,7 +92,7 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
       id: Date.now().toString(),
       userId: 'current-user',
       title: 'Registration Successful!',
-      message: `Your ticket has been confirmed. QR code is ready to scan.`,
+      message: `Your ticket for ${selectedEvent?.title || 'the selected event'} has been confirmed.`,
       type: 'success',
       read: false,
       timestamp: new Date(),
@@ -65,6 +102,7 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
     setTimeout(() => {
       setStep(1);
       setFormData({
+        selectedEventId: eventId || '',
         firstName: '',
         lastName: '',
         email: '',
@@ -169,6 +207,12 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {formError && (
+                  <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {formError}
+                  </div>
+                )}
+
                 {/* Step 1: Personal */}
                 {step === 1 && (
                   <motion.div
@@ -178,6 +222,20 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                     className="space-y-4"
                   >
                     <h3 className="text-lg font-semibold mb-6">Personal Information</h3>
+                    <select
+                      value={formData.selectedEventId}
+                      onChange={(e) => setFormData({ ...formData, selectedEventId: e.target.value })}
+                      className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white focus:border-purple-500 focus:shadow-neon-purple transition-all"
+                      required
+                      disabled={Boolean(eventId)}
+                    >
+                      <option value="">Select Event</option>
+                      {events.map((event) => (
+                        <option key={event.id} value={event.id}>
+                          {event.title} - {event.location}
+                        </option>
+                      ))}
+                    </select>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <input
                         type="text"
@@ -263,6 +321,10 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                   >
                     <h3 className="text-lg font-semibold mb-6">Review Your Registration</h3>
                     <div className="space-y-3 text-sm">
+                      <div className="flex justify-between gap-4">
+                        <span className="text-gray-400">Event</span>
+                        <span className="text-right">{selectedEvent?.title || 'Not selected'}</span>
+                      </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Name</span>
                         <span>{formData.firstName} {formData.lastName}</span>
@@ -272,8 +334,16 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                         <span>{formData.email}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span className="text-gray-400">Phone</span>
+                        <span>{formData.phone}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-gray-400">Ticket Type</span>
                         <span className="capitalize">{formData.ticketType}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-gray-400">Requirements</span>
+                        <span className="text-right">{formData.specialRequests}</span>
                       </div>
                       <div className="border-t border-purple-500/20 pt-3 flex justify-between text-lg font-semibold">
                         <span>Total</span>
@@ -281,11 +351,12 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                       </div>
                     </div>
                     <textarea
-                      placeholder="Special Requests (optional)"
+                      placeholder="Requirements / Special Requests (type N/A if none)"
                       value={formData.specialRequests}
                       onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
                       className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white placeholder-gray-500 focus:border-purple-500 transition-all"
                       rows={3}
+                      required
                     />
                   </motion.div>
                 )}
@@ -339,6 +410,13 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
               <h4 className="font-semibold mb-4">Registration Summary</h4>
 
               <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <FiCalendar className="text-cyan-400 mt-1" />
+                  <div className="text-sm">
+                    <p className="text-gray-400">Event</p>
+                    <p>{selectedEvent?.title || 'Select an event'}</p>
+                  </div>
+                </div>
                 <div className="flex items-start gap-3">
                   <FiUser className="text-purple-400 mt-1" />
                   <div className="text-sm">
