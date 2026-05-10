@@ -26,17 +26,12 @@ function ScrollChapter({
   index: number;
   onEnter: (index: number) => void;
 }) {
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], [index % 2 === 0 ? 34 : -34, index % 2 === 0 ? -34 : 34]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.98, 1.01, 0.98]);
-
   return (
     <motion.div
-      style={{ y, scale }}
       initial={{ opacity: 0, y: 70 }}
       whileInView={{ opacity: 1, y: 0 }}
       onViewportEnter={() => onEnter(index)}
-      viewport={{ once: false, amount: 0.42 }}
+      viewport={{ once: false, amount: 0.58 }}
       transition={{ duration: 0.7, ease: 'easeOut' }}
       className="relative cinematic-chapter"
     >
