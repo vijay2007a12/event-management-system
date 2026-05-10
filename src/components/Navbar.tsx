@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiMenu, FiX, FiBell } from 'react-icons/fi';
 import { useEventStore } from '@/store';
+import AuthPanel from './auth/AuthPanel';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications } = useEventStore();
+  const { notifications, user } = useEventStore();
   const unreadNotifications = notifications.filter((n) => !n.read).length;
 
   const menuItems = [
@@ -72,14 +73,19 @@ const Navbar = () => {
               {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
 
-            {/* CTA Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="hidden md:block px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-semibold hover:shadow-neon-purple transition-all"
-            >
-              Get Started
-            </motion.button>
+            <div className="hidden md:block">
+              {user ? <AuthPanel compact /> : (
+                <Link href="/login">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg font-semibold hover:shadow-neon-purple transition-all"
+                  >
+                    Login
+                  </motion.button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
@@ -101,6 +107,15 @@ const Navbar = () => {
                 </motion.div>
               </Link>
             ))}
+            <div className="pt-2">
+              {user ? <AuthPanel compact /> : (
+                <Link href="/login">
+                  <button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 px-4 py-3 font-semibold">
+                    Login
+                  </button>
+                </Link>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>

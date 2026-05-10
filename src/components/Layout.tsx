@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import ParticleBackground from './background/ParticleBackground';
 import Notifications from './Notifications';
+import { AuthProvider } from './auth/AuthProvider';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,27 +14,29 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="relative w-full min-h-screen bg-dark-950 text-gray-100 overflow-x-hidden">
-      {/* Animated background */}
-      <ParticleBackground />
+    <AuthProvider>
+      <div className="relative w-full min-h-screen bg-dark-950 text-gray-100 overflow-x-hidden">
+        {/* Animated background */}
+        <ParticleBackground />
 
-      {/* Gradient overlays */}
-      <div className="fixed inset-0 bg-gradient-radial from-purple-900/20 via-transparent to-transparent pointer-events-none" />
-      <div className="fixed inset-0 bg-gradient-radial from-cyan-900/10 via-transparent to-transparent pointer-events-none" />
+        {/* Gradient overlays */}
+        <div className="fixed inset-0 bg-gradient-radial from-purple-900/20 via-transparent to-transparent pointer-events-none" />
+        <div className="fixed inset-0 bg-gradient-radial from-cyan-900/10 via-transparent to-transparent pointer-events-none" />
 
-      {/* Navbar */}
-      <Navbar />
+        {/* Navbar */}
+        <Navbar />
 
-      {/* Main content */}
-      <main className="relative z-10 pt-20">
-        {children}
-      </main>
+        {/* Main content */}
+        <main className="relative z-10 pt-20">
+          {children}
+        </main>
 
-      {/* Notifications */}
-      <Notifications />
+        {/* Notifications */}
+        <Notifications />
 
-      {/* Footer */}
-      <Footer />
-    </div>
+        {/* Footer */}
+        <Footer />
+      </div>
+    </AuthProvider>
   );
 }
