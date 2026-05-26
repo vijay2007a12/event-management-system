@@ -9,6 +9,13 @@ export interface Event {
   registeredCount: number;
   status: 'draft' | 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
   thumbnail?: string;
+  city?: string;
+  halls?: {
+    id: string;
+    name: string;
+    address: string;
+    area: string;
+  }[];
   organizer: string;
   category: string;
   price: number;
@@ -25,6 +32,8 @@ export interface Registration {
   status: 'registered' | 'checked-in' | 'cancelled';
   ticketType: 'regular' | 'vip' | 'premium';
   bookedSlot?: string;
+  bookedCity?: string;
+  bookedHall?: string;
   qrCode?: string;
 }
 

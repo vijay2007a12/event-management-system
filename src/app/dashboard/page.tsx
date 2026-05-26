@@ -305,6 +305,12 @@ export default function DashboardPage() {
                           {registration.bookedSlot && (
                             <p className="mt-1 text-sm text-gray-400">{registration.bookedSlot}</p>
                           )}
+                          {registration.bookedHall && (
+                            <p className="mt-1 text-sm text-gray-400">
+                              {registration.bookedHall}
+                              {registration.bookedCity ? `, ${registration.bookedCity}` : ''}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>

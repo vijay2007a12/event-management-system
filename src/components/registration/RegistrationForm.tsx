@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FiCalendar, FiClock, FiCode, FiCreditCard, FiUser, FiMail, FiPhone } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiCode, FiCreditCard, FiMapPin, FiUser, FiMail, FiPhone } from 'react-icons/fi';
 import { useEventStore } from '@/store';
 
 export const PENDING_PAYMENT_KEY = 'eventhub-pending-payment';
@@ -26,12 +26,23 @@ const ticketLabels = {
   premium: 'Premium Delegate',
 };
 
-const RegistrationForm = ({ eventId }: { eventId?: string }) => {
+const RegistrationForm = ({
+  eventId,
+  city,
+  hallId,
+}: {
+  eventId?: string;
+  city?: string;
+  hallId?: string;
+}) => {
   const router = useRouter();
   const { events } = useEventStore();
+  const initialEvent = events.find((event) => event.id === eventId);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     selectedEventId: eventId || '',
+    selectedCity: city || initialEvent?.city || '',
+    selectedHallId: hallId || initialEvent?.halls?.[0]?.id || '',
     firstName: '',
     lastName: '',
     email: '',
@@ -47,6 +58,9 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
 
   const steps = ['Personal', 'Ticket', 'Billing', 'Review'];
   const selectedEvent = events.find((event) => event.id === formData.selectedEventId);
+  const cityOptions = Array.from(new Set(events.map((event) => event.city || event.location)));
+  const hallOptions = selectedEvent?.halls || [];
+  const selectedHall = hallOptions.find((hall) => hall.id === formData.selectedHallId);
   const selectedSlot = bookingSlots.find((slot) => slot.id === formData.selectedSlotId);
 
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
@@ -54,6 +68,8 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
   const validateStep = (currentStep: number) => {
     if (currentStep === 1) {
       if (!formData.selectedEventId) return 'Please select an event.';
+      if (!formData.selectedCity) return 'Please select a city.';
+      if (!formData.selectedHallId) return 'Please select a hall.';
       if (!formData.firstName.trim()) return 'First name is mandatory.';
       if (!formData.lastName.trim()) return 'Last name is mandatory.';
       if (!isValidEmail(formData.email)) return 'Enter a valid email address.';
@@ -123,11 +139,16 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
         status: 'registered',
         ticketType: formData.ticketType,
         bookedSlot: selectedSlot?.time || '',
+        bookedCity: formData.selectedCity,
+        bookedHall: selectedHall?.name || '',
         qrCode: `QR-${registrationId}`,
       },
       billing: {
         eventTitle: selectedEvent?.title || 'Selected event',
         bookedSlot: selectedSlot?.time || '',
+        bookedCity: formData.selectedCity,
+        bookedHall: selectedHall?.name || '',
+        hallAddress: selectedHall?.address || '',
         customerName: formData.billingName,
         customerEmail: formData.billingEmail,
         paymentMethod: formData.paymentMethod,
@@ -217,7 +238,15 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                     <h3 className="text-lg font-semibold mb-6">Personal Information</h3>
                     <select
                       value={formData.selectedEventId}
-                      onChange={(e) => setFormData({ ...formData, selectedEventId: e.target.value })}
+                      onChange={(e) => {
+                        const nextEvent = events.find((event) => event.id === e.target.value);
+                        setFormData({
+                          ...formData,
+                          selectedEventId: e.target.value,
+                          selectedCity: nextEvent?.city || '',
+                          selectedHallId: nextEvent?.halls?.[0]?.id || '',
+                        });
+                      }}
                       className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white focus:border-purple-500 focus:shadow-neon-purple transition-all"
                       required
                       disabled={Boolean(eventId)}
@@ -229,6 +258,35 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                         </option>
                       ))}
                     </select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <select
+                        value={formData.selectedCity}
+                        onChange={(e) => setFormData({ ...formData, selectedCity: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white focus:border-purple-500 focus:shadow-neon-purple transition-all"
+                        required
+                      >
+                        <option value="">Choose City</option>
+                        {cityOptions.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={formData.selectedHallId}
+                        onChange={(e) => setFormData({ ...formData, selectedHallId: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white focus:border-purple-500 focus:shadow-neon-purple transition-all"
+                        required
+                        disabled={!selectedEvent}
+                      >
+                        <option value="">Choose Hall</option>
+                        {hallOptions.map((hall) => (
+                          <option key={hall.id} value={hall.id}>
+                            {hall.name} - {hall.area}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <input
                         type="text"
@@ -408,6 +466,14 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                         <span className="text-right">{selectedEvent?.title || 'Not selected'}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span className="text-gray-400">City</span>
+                        <span>{formData.selectedCity || 'Not selected'}</span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-gray-400">Hall</span>
+                        <span className="text-right">{selectedHall?.name || 'Not selected'}</span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-gray-400">Name</span>
                         <span>{formData.firstName} {formData.lastName}</span>
                       </div>
@@ -506,6 +572,14 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                   <div className="text-sm">
                     <p className="text-gray-400">Event</p>
                     <p>{selectedEvent?.title || 'Select an event'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FiMapPin className="text-cyan-400 mt-1" />
+                  <div className="text-sm">
+                    <p className="text-gray-400">City & Hall</p>
+                    <p>{formData.selectedCity || 'Choose city'}</p>
+                    <p className="text-gray-500">{selectedHall?.name || 'Choose hall'}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

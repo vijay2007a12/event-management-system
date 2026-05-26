@@ -17,6 +17,9 @@ interface PendingPayment {
   billing: {
     eventTitle: string;
     bookedSlot: string;
+    bookedCity: string;
+    bookedHall: string;
+    hallAddress: string;
     customerName: string;
     customerEmail: string;
     paymentMethod: 'card' | 'upi' | 'netbanking';
@@ -173,6 +176,15 @@ export default function PaymentPage() {
                   <div>
                     <p className="text-gray-400">Booked slot</p>
                     <p className="mt-1 font-semibold">{pendingPayment.billing.bookedSlot}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">City</p>
+                    <p className="mt-1 font-semibold">{pendingPayment.billing.bookedCity}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Hall</p>
+                    <p className="mt-1 font-semibold">{pendingPayment.billing.bookedHall}</p>
+                    <p className="mt-1 text-xs text-gray-500">{pendingPayment.billing.hallAddress}</p>
                   </div>
                   <div>
                     <p className="text-gray-400">Billing email</p>
