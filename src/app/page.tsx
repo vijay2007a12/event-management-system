@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion';
+import { ReactNode } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Layout from '@/components/Layout';
 import HeroSection from '@/components/hero/HeroSection';
 import FeaturesSection from '@/components/hero/FeaturesSection';
@@ -45,57 +45,11 @@ function ScrollChapter({
   );
 }
 
-function ScrollDirector({ activeChapter }: { activeChapter: number }) {
-  const { scrollYProgress } = useScroll();
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.35 });
-  const chapterMotion = useMotionValue(activeChapter);
-  const smoothChapter = useSpring(chapterMotion, { stiffness: 170, damping: 24, mass: 0.4 });
-  const titleY = useTransform(smoothChapter, (latest) => `-${latest * 100}%`);
-
-  useEffect(() => {
-    chapterMotion.set(activeChapter);
-  }, [activeChapter, chapterMotion]);
-
-  return (
-    <div className="pointer-events-none fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
-      <div className="glass-card-light flex w-56 items-center gap-4 rounded-xl border border-cyan-400/20 p-4 shadow-2xl shadow-cyan-900/20">
-        <div className="relative h-44 w-1 overflow-hidden rounded-full bg-slate-700/80">
-          <motion.div
-            style={{ scaleY: smoothProgress, transformOrigin: 'top' }}
-            className="absolute left-0 top-0 h-full w-full rounded-full bg-gradient-to-b from-cyan-400 via-purple-400 to-pink-400"
-          />
-        </div>
-
-        <div className="min-w-0">
-          <p className="mb-2 text-xs uppercase tracking-[0.28em] text-cyan-200/80">
-            Scene {String(activeChapter + 1).padStart(2, '0')}
-          </p>
-          <div className="h-9 overflow-hidden">
-            <motion.div style={{ y: titleY }}>
-              {chapters.map((chapter) => (
-                <h2 key={chapter.title} className="h-9 text-2xl font-bold leading-9 text-white">
-                  {chapter.title}
-                </h2>
-              ))}
-            </motion.div>
-          </div>
-          <p className="mt-2 text-sm leading-5 text-gray-300">
-            {chapters[activeChapter].subtitle}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
-  const [activeChapter, setActiveChapter] = useState(0);
-
   return (
     <Layout>
-      <ScrollDirector activeChapter={activeChapter} />
       {chapters.map((chapter, index) => (
-        <ScrollChapter key={chapter.title} index={index} onEnter={setActiveChapter}>
+        <ScrollChapter key={chapter.title} index={index} onEnter={() => undefined}>
           {chapter.content}
         </ScrollChapter>
       ))}
