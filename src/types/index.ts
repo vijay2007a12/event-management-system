@@ -24,6 +24,7 @@ export interface Registration {
   registeredAt: Date;
   status: 'registered' | 'checked-in' | 'cancelled';
   ticketType: 'regular' | 'vip' | 'premium';
+  bookedSlot?: string;
   qrCode?: string;
 }
 

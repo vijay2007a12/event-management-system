@@ -3,10 +3,28 @@
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FiCalendar, FiCode, FiCreditCard, FiUser, FiMail, FiPhone } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiCode, FiCreditCard, FiUser, FiMail, FiPhone } from 'react-icons/fi';
 import { useEventStore } from '@/store';
 
-export const PENDING_PAYMENT_KEY = 'eventhub-pending-demo-payment';
+export const PENDING_PAYMENT_KEY = 'eventhub-pending-payment';
+
+const bookingSlots = [
+  { id: 'morning', label: 'Morning Slot', time: '09:30 AM - 11:30 AM' },
+  { id: 'afternoon', label: 'Afternoon Slot', time: '01:00 PM - 03:00 PM' },
+  { id: 'evening', label: 'Evening Slot', time: '05:30 PM - 07:30 PM' },
+];
+
+const ticketPrices = {
+  regular: 49,
+  vip: 99,
+  premium: 199,
+};
+
+const ticketLabels = {
+  regular: 'Standard Entry',
+  vip: 'VIP Access',
+  premium: 'Premium Delegate',
+};
 
 const RegistrationForm = ({ eventId }: { eventId?: string }) => {
   const router = useRouter();
@@ -19,12 +37,17 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
     email: '',
     phone: '',
     ticketType: 'regular' as 'regular' | 'vip' | 'premium',
+    selectedSlotId: '',
+    billingName: '',
+    billingEmail: '',
+    paymentMethod: 'card' as 'card' | 'upi' | 'netbanking',
     specialRequests: '',
   });
   const [formError, setFormError] = useState('');
 
-  const steps = ['Personal', 'Ticket', 'Review'];
+  const steps = ['Personal', 'Ticket', 'Billing', 'Review'];
   const selectedEvent = events.find((event) => event.id === formData.selectedEventId);
+  const selectedSlot = bookingSlots.find((slot) => slot.id === formData.selectedSlotId);
 
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
 
@@ -41,7 +64,17 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
       return 'Please select a ticket type.';
     }
 
-    if (currentStep === 3 && !formData.specialRequests.trim()) {
+    if (currentStep === 2 && !formData.selectedSlotId) {
+      return 'Please choose a booking slot.';
+    }
+
+    if (currentStep === 3) {
+      if (!formData.billingName.trim()) return 'Billing name is mandatory.';
+      if (!isValidEmail(formData.billingEmail)) return 'Enter a valid billing email.';
+      if (!formData.paymentMethod) return 'Please select a payment method.';
+    }
+
+    if (currentStep === 4 && !formData.specialRequests.trim()) {
       return 'Please add your requirements or type N/A.';
     }
 
@@ -89,10 +122,15 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
         registeredAt: new Date().toISOString(),
         status: 'registered',
         ticketType: formData.ticketType,
+        bookedSlot: selectedSlot?.time || '',
         qrCode: `QR-${registrationId}`,
       },
       billing: {
         eventTitle: selectedEvent?.title || 'Selected event',
+        bookedSlot: selectedSlot?.time || '',
+        customerName: formData.billingName,
+        customerEmail: formData.billingEmail,
+        paymentMethod: formData.paymentMethod,
         subtotal: ticketPrice,
         tax: taxAmount,
         total: ticketPrice + taxAmount,
@@ -111,12 +149,6 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
       y: 0,
       transition: { duration: 0.6 },
     },
-  };
-
-  const ticketPrices = {
-    regular: 49,
-    vip: 99,
-    premium: 199,
   };
 
   return (
@@ -260,8 +292,10 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                             className="mr-4"
                           />
                           <div className="flex-grow">
-                            <p className="font-semibold capitalize">{type} Ticket</p>
-                            <p className="text-sm text-gray-400">Premium access and benefits</p>
+                            <p className="font-semibold">{ticketLabels[type]}</p>
+                            <p className="text-sm text-gray-400">
+                              {type === 'regular' ? 'Entry pass with event access' : type === 'vip' ? 'Priority seating and lounge access' : 'Front-row access with delegate kit'}
+                            </p>
                           </div>
                           <span className="text-lg font-bold text-cyan-400">
                             ${ticketPrices[type]}
@@ -269,11 +303,98 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                         </label>
                       ))}
                     </div>
+
+                    <div className="pt-4">
+                      <h3 className="text-lg font-semibold mb-4">Book Your Slot</h3>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        {bookingSlots.map((slot) => (
+                          <label
+                            key={slot.id}
+                            className={`cursor-pointer rounded-lg border p-4 transition-all ${
+                              formData.selectedSlotId === slot.id
+                                ? 'border-cyan-400 bg-cyan-500/10'
+                                : 'border-purple-500/20 glass-card hover:border-purple-500/50'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="bookingSlot"
+                              value={slot.id}
+                              checked={formData.selectedSlotId === slot.id}
+                              onChange={(e) => setFormData({ ...formData, selectedSlotId: e.target.value })}
+                              className="sr-only"
+                            />
+                            <FiClock className="mb-3 text-cyan-300" size={20} />
+                            <p className="font-semibold">{slot.label}</p>
+                            <p className="mt-1 text-sm text-gray-400">{slot.time}</p>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 3: Billing */}
+                {step === 3 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    <h3 className="text-lg font-semibold mb-6">Billing Details</h3>
+                    <input
+                      type="text"
+                      placeholder="Billing Name"
+                      value={formData.billingName}
+                      onChange={(e) => setFormData({ ...formData, billingName: e.target.value })}
+                      className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white placeholder-gray-500 focus:border-purple-500 focus:shadow-neon-purple transition-all"
+                      required
+                    />
+                    <input
+                      type="email"
+                      placeholder="Billing Email"
+                      value={formData.billingEmail}
+                      onChange={(e) => setFormData({ ...formData, billingEmail: e.target.value })}
+                      className="w-full px-4 py-3 rounded-lg glass-card border border-purple-500/20 text-white placeholder-gray-500 focus:border-purple-500 focus:shadow-neon-purple transition-all"
+                      required
+                    />
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      {[
+                        { value: 'card', label: 'Card' },
+                        { value: 'upi', label: 'UPI' },
+                        { value: 'netbanking', label: 'Net Banking' },
+                      ].map((method) => (
+                        <label
+                          key={method.value}
+                          className={`cursor-pointer rounded-lg border p-4 text-center font-semibold transition-all ${
+                            formData.paymentMethod === method.value
+                              ? 'border-cyan-400 bg-cyan-500/10 text-cyan-200'
+                              : 'border-purple-500/20 glass-card hover:border-purple-500/50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={method.value}
+                            checked={formData.paymentMethod === method.value}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                paymentMethod: e.target.value as 'card' | 'upi' | 'netbanking',
+                              })
+                            }
+                            className="sr-only"
+                          />
+                          {method.label}
+                        </label>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
 
                 {/* Step 3: Review */}
-                {step === 3 && (
+                {step === 4 && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -300,7 +421,15 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Ticket Type</span>
-                        <span className="capitalize">{formData.ticketType}</span>
+                        <span>{ticketLabels[formData.ticketType]}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Booked Slot</span>
+                        <span>{selectedSlot?.time || 'Not selected'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Payment Type</span>
+                        <span className="capitalize">{formData.paymentMethod}</span>
                       </div>
                       <div className="flex justify-between gap-4">
                         <span className="text-gray-400">Requirements</span>
@@ -401,10 +530,17 @@ const RegistrationForm = ({ eventId }: { eventId?: string }) => {
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
+                  <FiClock className="text-purple-400 mt-1" />
+                  <div className="text-sm">
+                    <p className="text-gray-400">Slot</p>
+                    <p>{selectedSlot?.time || 'Choose a slot'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
                   <FiCode className="text-cyan-400 mt-1" />
                   <div className="text-sm">
                     <p className="text-gray-400">Ticket</p>
-                    <p className="capitalize">{formData.ticketType}</p>
+                    <p>{ticketLabels[formData.ticketType]}</p>
                   </div>
                 </div>
               </div>

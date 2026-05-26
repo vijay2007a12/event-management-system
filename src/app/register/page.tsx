@@ -2,11 +2,15 @@
 
 import Layout from '@/components/Layout';
 import RegistrationForm from '@/components/registration/RegistrationForm';
+import { useSearchParams } from 'next/navigation';
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const eventId = searchParams?.get('eventId') || undefined;
+
   return (
     <Layout>
-      <RegistrationForm />
+      <RegistrationForm eventId={eventId} />
     </Layout>
   );
 }

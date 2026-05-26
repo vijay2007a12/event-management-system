@@ -53,6 +53,7 @@ const sampleRegistrations: Registration[] = [
     registeredAt: new Date('2026-05-01T10:15:00'),
     status: 'registered',
     ticketType: 'premium',
+    bookedSlot: '09:30 AM - 11:30 AM',
     qrCode: 'QR-reg-001',
   },
   {
@@ -64,6 +65,7 @@ const sampleRegistrations: Registration[] = [
     registeredAt: new Date('2026-05-03T14:45:00'),
     status: 'checked-in',
     ticketType: 'vip',
+    bookedSlot: '06:00 PM - 08:00 PM',
     qrCode: 'QR-reg-002',
   },
 ];

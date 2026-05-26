@@ -146,7 +146,7 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                     </div>
                   </div>
 
-                  <Link href={`/register`}>
+                  <Link href={`/register?eventId=${event.id}`}>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}

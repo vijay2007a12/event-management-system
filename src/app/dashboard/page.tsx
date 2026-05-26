@@ -302,6 +302,9 @@ export default function DashboardPage() {
                         <div key={registration.id} className="rounded-lg bg-slate-900/50 p-4">
                           <p className="font-semibold">{registration.userName}</p>
                           <p className="text-sm capitalize text-cyan-300">{registration.ticketType} ticket</p>
+                          {registration.bookedSlot && (
+                            <p className="mt-1 text-sm text-gray-400">{registration.bookedSlot}</p>
+                          )}
                         </div>
                       ))}
                     </div>

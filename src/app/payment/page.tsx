@@ -16,6 +16,10 @@ interface PendingPayment {
   };
   billing: {
     eventTitle: string;
+    bookedSlot: string;
+    customerName: string;
+    customerEmail: string;
+    paymentMethod: 'card' | 'upi' | 'netbanking';
     subtotal: number;
     tax: number;
     total: number;
@@ -34,18 +38,18 @@ export default function PaymentPage() {
     const rawPayment = window.localStorage.getItem(PENDING_PAYMENT_KEY);
 
     if (!rawPayment) {
-      setError('No pending demo payment was found.');
+      setError('No pending payment was found.');
       return;
     }
 
     try {
       setPendingPayment(JSON.parse(rawPayment) as PendingPayment);
     } catch {
-      setError('The pending demo payment could not be loaded.');
+      setError('The pending payment could not be loaded.');
     }
   }, []);
 
-  const handleDemoPayment = () => {
+  const handlePayment = () => {
     if (!pendingPayment) return;
 
     setIsPaying(true);
@@ -68,10 +72,10 @@ export default function PaymentPage() {
       }
 
       addNotification({
-        id: `note-demo-payment-${Date.now()}`,
+        id: `note-payment-${Date.now()}`,
         userId: registration.userId,
-        title: 'Demo payment successful',
-        message: `Your ticket for ${pendingPayment.billing.eventTitle} has been confirmed.`,
+        title: 'Payment successful',
+        message: `Your ${registration.bookedSlot} slot for ${pendingPayment.billing.eventTitle} has been confirmed.`,
         type: 'success',
         read: false,
         timestamp: new Date(),
@@ -99,19 +103,18 @@ export default function PaymentPage() {
 
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/30 px-3 py-1 text-sm font-semibold text-cyan-200">
               <FiShield />
-              Demo checkout
+              Secure checkout
             </p>
-            <h1 className="mb-4 text-4xl font-bold md:text-5xl">Fake Billing Payment</h1>
+            <h1 className="mb-4 text-4xl font-bold md:text-5xl">Billing Payment</h1>
             <p className="max-w-2xl text-gray-300">
-              This checkout is only for project demo flow. It redirects like a payment gateway,
-              but no real billing, card charge, or external payment processor is used.
+              Review the invoice, confirm the booked slot, and complete the registration payment.
             </p>
 
             <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
-                { label: 'Demo mode', icon: FiCreditCard },
-                { label: 'No real charge', icon: FiLock },
-                { label: 'Redirect flow', icon: FiCheckCircle },
+                { label: 'Invoice ready', icon: FiCreditCard },
+                { label: 'Protected details', icon: FiLock },
+                { label: 'Instant confirmation', icon: FiCheckCircle },
               ].map((item) => {
                 const Icon = item.icon;
 
@@ -125,16 +128,16 @@ export default function PaymentPage() {
             </div>
 
             <div className="mt-10 rounded-xl border border-purple-500/20 bg-slate-950/40 p-5">
-              <p className="mb-4 text-sm font-semibold text-gray-300">Demo card preview</p>
+              <p className="mb-4 text-sm font-semibold text-gray-300">Payment method preview</p>
               <div className="rounded-xl bg-gradient-to-br from-teal-500 via-sky-500 to-amber-500 p-5 text-slate-950 shadow-2xl">
                 <div className="mb-10 flex items-center justify-between">
-                  <span className="font-bold">EventHub Demo</span>
+                  <span className="font-bold">EventHub Pay</span>
                   <FiCreditCard size={26} />
                 </div>
-                <p className="mb-4 text-lg font-semibold tracking-[0.24em]">4242 4242 4242 4242</p>
+                <p className="mb-4 text-lg font-semibold tracking-[0.24em]">**** **** **** 4829</p>
                 <div className="flex justify-between text-xs font-bold uppercase">
-                  <span>Demo User</span>
-                  <span>12/30</span>
+                  <span>{pendingPayment?.billing.customerName || 'Customer'}</span>
+                  <span>{pendingPayment?.billing.paymentMethod || 'card'}</span>
                 </div>
               </div>
             </div>
@@ -167,6 +170,18 @@ export default function PaymentPage() {
                     <p className="text-gray-400">Ticket type</p>
                     <p className="mt-1 font-semibold capitalize">{pendingPayment.registration.ticketType}</p>
                   </div>
+                  <div>
+                    <p className="text-gray-400">Booked slot</p>
+                    <p className="mt-1 font-semibold">{pendingPayment.billing.bookedSlot}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Billing email</p>
+                    <p className="mt-1 font-semibold">{pendingPayment.billing.customerEmail}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Payment type</p>
+                    <p className="mt-1 font-semibold capitalize">{pendingPayment.billing.paymentMethod}</p>
+                  </div>
                 </div>
 
                 <div className="space-y-3 border-t border-purple-500/20 pt-5">
@@ -175,7 +190,7 @@ export default function PaymentPage() {
                     <span>${pendingPayment.billing.subtotal}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Demo tax</span>
+                    <span className="text-gray-400">Tax</span>
                     <span>${pendingPayment.billing.tax}</span>
                   </div>
                   <div className="flex justify-between border-t border-purple-500/20 pt-4 text-lg font-bold text-cyan-300">
@@ -186,20 +201,16 @@ export default function PaymentPage() {
 
                 <button
                   type="button"
-                  onClick={handleDemoPayment}
+                  onClick={handlePayment}
                   disabled={isPaying}
                   className="mt-8 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-cyan-600 px-5 py-3 font-semibold text-white transition-all hover:shadow-neon-cyan disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <FiCreditCard size={18} />
-                  {isPaying ? 'Redirecting...' : 'Pay Demo Bill'}
+                  {isPaying ? 'Processing...' : 'Pay Bill'}
                 </button>
-
-                <p className="mt-4 text-center text-xs leading-5 text-gray-500">
-                  Demo only. No real money, cards, or payment gateway calls.
-                </p>
               </>
             ) : (
-              <p className="text-sm text-gray-400">Loading demo checkout...</p>
+              <p className="text-sm text-gray-400">Loading checkout...</p>
             )}
           </motion.aside>
         </div>
